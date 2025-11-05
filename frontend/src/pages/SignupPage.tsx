@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { authApi } from "@/services/authApi";
 
+// SignupPage: registration form for new users
+// - Collects name, email and password, performs client and server-side validation
+// - Integrated with backend authentication API
 export default function SignupPage() {
+  const navigate = useNavigate();
   // Local form state for controlled inputs
   const [formData, setFormData] = useState({
     name: "",
@@ -13,28 +18,53 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(false); // shows loading while request is in flight
+  const [isLoading, setIsLoading] = useState(false); // shows loading while request is in-flight
   const [error, setError] = useState(""); // top-level form error message
 
-  // Handle form submission: validate passwords match and simulate signup
+  // Handle form submission: validate and register via backend API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Simple match check before sending
+    // Client-side validation: passwords must match
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
+    // Validate password length (min 6 characters)
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate API call placeholder for real signup request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Log form data for now integrate backend signup next
-    console.log("Signup attempt:", formData);
-    setIsLoading(false);
+    try {
+      // Call backend registration API
+      const response = await authApi.register(formData);
+      
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Show success and redirect to books page
+      console.log("Registration successful:", response.data);
+      navigate("/books");
+    } catch (err: any) {
+      // Handle registration errors
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors from backend
+        const errors = err.response.data.errors;
+        const errorMessages = Object.values(errors).flat();
+        setError(errorMessages.join(". "));
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Render centered signup card with inputs for name, email and password
@@ -92,7 +122,9 @@ export default function SignupPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 disabled={isLoading}
+                minLength={6}
               />
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
             </div>
 
             <div className="space-y-2">

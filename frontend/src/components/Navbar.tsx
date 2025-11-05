@@ -1,8 +1,35 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import type { User } from "@/types";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  // Local state holds the current user (if logged in). We read from localStorage
+  // because login/signup currently store a `user` JSON object there.
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    }
+
+    // Listen for storage events so the navbar updates when auth changes in other tabs
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "user") {
+        setUser(e.newValue ? JSON.parse(e.newValue) : null);
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -32,13 +59,40 @@ export default function Navbar() {
             >
               <Link to="/books">Books</Link>
             </Button>
-            <Button
-              variant={isActive("/login") ? "default" : "ghost"}
-              asChild
-              size="sm"
-            >
-              <Link to="/login">Login</Link>
-            </Button>
+            {!user ? (
+              <>
+                <Button
+                  variant={isActive("/login") ? "default" : "ghost"}
+                  asChild
+                  size="sm"
+                >
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button
+                  variant={isActive("/signup") ? "default" : "ghost"}
+                  asChild
+                  size="sm"
+                >
+                  <Link to="/signup">Sign up</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-foreground/90 px-2">{user.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Clear stored user and navigate to landing page
+                    localStorage.removeItem("user");
+                    setUser(null);
+                    navigate("/");
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

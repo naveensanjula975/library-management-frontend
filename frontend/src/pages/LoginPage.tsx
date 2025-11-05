@@ -1,27 +1,48 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { authApi } from "@/services/authApi";
 
 export default function LoginPage() {
-  // controlled inputs and loading indicator
+  const navigate = useNavigate();
+  // Form state: controlled inputs and loading indicator
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Handle form submit prevent default, show loading, simulate API call
+  // Handle form submit: authenticate user via backend API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
 
-    // Simulate API call replace with real auth request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Log result for now integrate auth flow later
-    console.log("Login attempt:", { email, password });
-    setIsLoading(false);
+    try {
+      // Call backend login API
+      const response = await authApi.login({ email, password });
+      
+      // Store user data in localStorage (in production, use secure token storage)
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Show success message and redirect to books page
+      console.log("Login successful:", response.data);
+      navigate("/books");
+    } catch (err: any) {
+      // Handle login errors
+      if (err.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Render centered login card with form fields and actions
@@ -35,8 +56,15 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Login form email and password inputs, submit button */}
+          {/* Login form: email and password inputs, submit button */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Display error message if login fails */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
