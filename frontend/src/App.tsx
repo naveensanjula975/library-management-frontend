@@ -1,12 +1,21 @@
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import LandingPage from "./pages/LandingPage";
+import BooksPage from "./pages/BooksPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
-function App() {
-
+export default function App() {
   return (
-    <div className="text-yellow-500">
-      <h1 className="text-center text-8xl">hello world</h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/books" element={<BooksPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
