@@ -14,8 +14,7 @@ export default function Navbar() {
             to="/"
             className="text-xl font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-2"
           >
-            <span>📚</span>
-            <span>Library</span>
+            <span>BookFlow</span>
           </Link>
 
           <div className="flex items-center gap-2">
