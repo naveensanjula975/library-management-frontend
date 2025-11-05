@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Book } from "../types";
+import type { Book, User } from "../types";
 import api from "../services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,10 @@ export default function BooksPage() {
     if (!s) return "";
     return s.length > n ? s.slice(0, n - 1) + "…" : s;
   };
+  
+  // Check if user is logged in
+  const [user, setUser] = useState<User | null>(null);
+  
   // Data & UI state
   const [books, setBooks] = useState<Book[]>([]); // list of books fetched from backend
   const [loading, setLoading] = useState(true); // whether books are currently loading
@@ -54,6 +58,16 @@ export default function BooksPage() {
   useEffect(() => {
     // Load books once when component mounts
     loadBooks();
+    
+    // Check if user is logged in
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    }
   }, []);
 
   const loadBooks = async () => {
@@ -221,7 +235,7 @@ export default function BooksPage() {
               {books.length} {books.length === 1 ? "book" : "books"} in your collection
             </p>
           </div>
-          <Button onClick={handleAdd}>+ Add Book</Button>
+          {user && <Button onClick={handleAdd}>+ Add Book</Button>}
         </div>
 
         {/* Alert */}
@@ -291,7 +305,7 @@ export default function BooksPage() {
                   ? "Try adjusting your search query"
                   : "Add your first book to get started"}
               </p>
-              {!searchQuery && <Button onClick={handleAdd}>Add your first book</Button>}
+              {!searchQuery && user && <Button onClick={handleAdd}>Add your first book</Button>}
             </CardContent>
           </Card>
         ) : (
@@ -336,19 +350,21 @@ export default function BooksPage() {
                             <Badge variant="secondary">{book.publishedYear}</Badge>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleEdit(book)}>
-                                Edit
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteTarget(book)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                Delete
-                              </Button>
-                            </div>
+                            {user && (
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => handleEdit(book)}>
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDeleteTarget(book)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -380,21 +396,23 @@ export default function BooksPage() {
                       </p>
                     </CardContent>
                   )}
-                  <CardContent className={book.description ? "pt-0" : ""}>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(book)} className="flex-1">
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeleteTarget(book)}
-                        className="flex-1 text-destructive hover:text-destructive"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
+                  {user && (
+                    <CardContent className={book.description ? "pt-0" : ""}>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(book)} className="flex-1">
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeleteTarget(book)}
+                          className="flex-1 text-destructive hover:text-destructive"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </CardContent>
+                  )}
                 </Card>
               ))}
             </div>

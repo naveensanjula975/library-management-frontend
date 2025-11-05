@@ -46,6 +46,8 @@ export default function SignupPage() {
       
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(response.data.user));
+  // Notify other parts of the app (same-window) about auth change
+  try { window.dispatchEvent(new CustomEvent('auth', { detail: response.data.user })); } catch {}
       
       // Show success and redirect to books page
       console.log("Registration successful:", response.data);

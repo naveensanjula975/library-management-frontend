@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ export default function LoginPage() {
       
       // Store user data in localStorage (in production, use secure token storage)
       localStorage.setItem('user', JSON.stringify(response.data.user));
+  // Notify other parts of the app (same-window) about auth change
+  try { window.dispatchEvent(new CustomEvent('auth', { detail: response.data.user })); } catch {}
       
       // Show success message and redirect to books page
       console.log("Login successful:", response.data);
@@ -103,12 +105,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
-            <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </div>
           </form>
         </CardContent>
       </Card>

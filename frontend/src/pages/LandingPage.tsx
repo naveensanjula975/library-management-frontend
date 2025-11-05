@@ -1,8 +1,31 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { User } from "@/types";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+  };
+
   // Render main landing page sections
   return (
     <div className="min-h-screen bg-background">
@@ -21,10 +44,16 @@ export default function LandingPage() {
             <Button size="lg" asChild>
               <Link to="/books">Browse Books</Link>
             </Button>
-            {/* Secondary CTA goes to login/signup flow */}
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/login">Get Started</Link>
-            </Button>
+            {/* Secondary CTA goes to login/signup flow or logout if authenticated */}
+            {!user ? (
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/login">Get Started</Link>
+              </Button>
+            ) : (
+              <Button size="lg" variant="outline" onClick={handleLogout}>
+                Logout
+              </Button>
+            )}
           </div>
         </div>
       </section>

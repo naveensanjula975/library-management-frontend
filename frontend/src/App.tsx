@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
 import BooksPage from "./pages/BooksPage";
 import LoginPage from "./pages/LoginPage";
@@ -11,7 +12,14 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/books" element={<BooksPage />} />
+        <Route 
+          path="/books" 
+          element={
+            <ProtectedRoute>
+              <BooksPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
       </Routes>

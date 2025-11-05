@@ -27,8 +27,31 @@ export default function Navbar() {
       }
     };
 
+    // Listen for a custom "auth" event dispatched within the same window
+    // (storage events don't fire in the same window that set localStorage)
+    const onAuth = (e: Event) => {
+      try {
+        // If event carries detail, use it; otherwise read from localStorage
+        // @ts-ignore - CustomEvent typing
+        const detail = (e as CustomEvent)?.detail;
+        if (detail) {
+          setUser(detail as User);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      const raw2 = localStorage.getItem("user");
+      setUser(raw2 ? JSON.parse(raw2) : null);
+    };
+
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("auth", onAuth as EventListener);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("auth", onAuth as EventListener);
+    };
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
@@ -60,22 +83,13 @@ export default function Navbar() {
               <Link to="/books">Books</Link>
             </Button>
             {!user ? (
-              <>
-                <Button
-                  variant={isActive("/login") ? "default" : "ghost"}
-                  asChild
-                  size="sm"
-                >
-                  <Link to="/login">Login</Link>
-                </Button>
-                <Button
-                  variant={isActive("/signup") ? "default" : "ghost"}
-                  asChild
-                  size="sm"
-                >
-                  <Link to="/signup">Sign up</Link>
-                </Button>
-              </>
+              <Button
+                variant={isActive("/login") ? "default" : "ghost"}
+                asChild
+                size="sm"
+              >
+                <Link to="/login">Login</Link>
+              </Button>
             ) : (
               <>
                 <span className="text-sm text-foreground/90 px-2">{user.name}</span>
